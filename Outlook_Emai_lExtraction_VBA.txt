@@ -1,0 +1,90 @@
+Sub SaveEmailAttachments()
+    Dim outlookApp As Object, outlookNamespace As Object, targetFolder As Object
+    Dim mailItem As Object, attachment As Object, fso As Object
+    Dim savePath As String, folderName As String, subjectKeyword As String
+    Dim senderFilter As String, dateFrom As Date, exactMatch As Boolean
+    Dim multipleAttachments As String, fileTypeFilter As String, fileNameFilter As String
+    Dim newFileName As String, baseName As String, extension As String, timeStamp As String
+    Dim fileCount As Integer, skippedCount As Integer, wrongTypeCount As Integer, inlineSkipped As Integer
+    Dim folder As Object, subFolder As Object
+    Dim ws As Worksheet
+    
+    Set ws = ThisWorkbook.Sheets("Search Criteria")
+    
+    ' Get settings
+    subjectKeyword = ws.Range("B2").Value
+    senderFilter = ws.Range("B3").Value
+    dateFrom = ws.Range("B4").Value
+    savePath = ws.Range("B5").Value
+    folderName = ws.Range("B6").Value
+    exactMatch = ws.Range("B7").Value
+    multipleAttachments = ws.Range("B8").Value
+    fileTypeFilter = Trim(LCase(ws.Range("B9").Value))
+    fileNameFilter = Trim(LCase(ws.Range("B10").Value))  ' Filename must contain this
+    
+    If fileTypeFilter <> "" And Left(fileTypeFilter, 1) <> "." Then
+        fileTypeFilter = "." & fileTypeFilter
+    End If
+    
+    If savePath = "" Then
+        MsgBox "Please enter a save path!", vbExclamation
+        Exit Sub
+    End If
+    
+    If Right(savePath, 1) <> "\" Then savePath = savePath & "\"
+    
+    Set fso = CreateObject("Scripting.FileSystemObject")
+    If Not fso.FolderExists(savePath) Then
+        On Error Resume Next
+        fso.CreateFolder savePath
+        If Err.Number <> 0 Then
+            MsgBox "Cannot create folder: " & savePath, vbCritical
+            Exit Sub
+        End If
+        On Error GoTo 0
+    End If
+    
+    Set outlookApp = CreateObject("Outlook.Application")
+    Set outlookNamespace = outlookApp.GetNamespace("MAPI")
+    
+    ' Find folder
+    On Error Resume Next
+    
+    If folderName = "" Or UCase(Trim(folderName)) = "INBOX" Then
+        Set targetFolder = outlookNamespace.GetDefaultFolder(6)
+    Else
+        Set targetFolder = outlookNamespace.GetDefaultFolder(6).Folders(folderName)
+        
+        If targetFolder Is Nothing Then
+            Dim acct As Object
+            For Each acct In outlookNamespace.Folders
+                If UCase(acct.Name) = UCase(folderName) Then
+                    Set targetFolder = acct
+                    Exit For
+                End If
+                
+                For Each folder In acct.Folders
+                    If UCase(folder.Name) = UCase(folderName) Then
+                        Set targetFolder = folder
+                        Exit For
+                    End If
+                    
+                    For Each subFolder In folder.Folders
+                        If UCase(subFolder.Name) = UCase(folderName) Then
+                            Set targetFolder = subFolder
+                            Exit For
+                        End If
+                    Next
+                    If Not targetFolder Is Nothing Then Exit For
+                Next
+                If Not targetFolder Is Nothing Then Exit For
+            Next
+        End If
+    End If
+    
+    On Error GoTo 0
+    
+    If targetFolder Is Nothing Then
+        MsgBox "Folder not found: " & folderName, vbExclamation
+        Exit Sub
+    End If

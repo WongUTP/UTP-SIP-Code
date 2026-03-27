@@ -1,0 +1,58 @@
+============================================================Run PDP_Processing.exe from Excel============================================================
+
+Sub RunScriptAndRefresh_PDP()
+    Dim wsh As Object
+    Dim exePath As String
+    Dim waitOnReturn As Boolean
+    Dim windowStyle As Integer
+    
+    Set wsh = CreateObject("WScript.Shell")
+    
+    exePath = """\\MKZSDV507.INFINEON.COM\Mold_Alignment\Mold_Quality_Imp\Others\Defect Management Library\PDP_Email.exe"""
+    
+    windowStyle = 1 'change to 0 to hide command prompt
+    waitOnReturn = True
+    ErrorCode = wsh.Run(exePath, windowStyle, waitOnReturn)
+    
+    If ErrorCode = 0 Then
+        MsgBox "PDP lots updated successfully!", vbInformation, "Update Complete"
+        
+    Else
+        MsgBox "The script encountered an error.", vbCritical, "Update Failed"
+        
+    End If
+    
+    Set wsh = Nothing
+    
+End Sub
+
+=========================================================================================================================================================
+============================================================Run APC_Processing.exe from Excel============================================================
+
+Sub RunScriptAndRefresh_APC()
+    Dim wsh As Object
+    Dim exePath As String
+    Dim waitOnReturn As Boolean
+    Dim windowStyle As Integer
+    
+    Set wsh = CreateObject("WScript.Shell")
+    
+    exePath = """\\MKZSDV507.INFINEON.COM\Mold_Alignment\Mold_Quality_Imp\Others\Defect Management Library\codename.exe"""
+    
+    windowStyle = 1 'change to 0 to hide command prompt
+    waitOnReturn = True
+    ErrorCode = wsh.Run(exePath, windowStyle, waitOnReturn)
+    
+    If ErrorCode = 0 Then
+        MsgBox "APC data updated successfully!", vbInformation, "Update Complete"
+        
+    Else
+        MsgBox "The script encountered an error.", vbCritical, "Update Failed"
+        
+    End If
+    
+    Set wsh = Nothing
+    
+End Sub
+
+=========================================================================================================================================================
